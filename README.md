@@ -1,21 +1,38 @@
 # Feature Development Skill
 
-A Codex skill for running large, multi-stage feature or module development without losing decisions, deferred requirements, verification state, or handoff context.
+A SkillCue-first Codex skill for running large, multi-stage feature or module development without losing decisions, deferred requirements, implementation state, or handoff context.
 
-The skill keeps durable project state in the target repository and separates:
+The skill is designed first for the real SkillCue layout:
 
-- approved plans;
-- implementation reports;
-- independent reviews;
-- verified completion;
-- deferred obligations for future stages;
-- bounded handoff context for new Codex sessions.
+```text
+skillcue-workspace/
+├── backend/   # independent Git repository: tsoyvit/skillcue
+├── web/       # independent Git repository: tsoyvit/skillcue-web
+├── windows/   # independent Git repository: tsoyvit/skillcue-windows
+├── landing/   # independent Git repository: tsoyvit/skillcue-landing
+├── docs/
+├── scripts/
+└── Makefile
+```
 
-It is intentionally not a general replacement for ordinary task planning. Use it for substantial features, modules, migrations, cross-system changes, and long-running work that will span multiple plans, reviews, or sessions.
+It remains reusable for ordinary single-repository projects and other coordination workspaces.
+
+The lifecycle is deliberately small:
+
+```text
+initialize or resume
+→ discover
+→ PLAN.md
+→ explicit plan approval
+→ implementation
+→ RESULT.md
+→ ROADMAP.md and HANDOFF.md update
+→ next stage
+```
+
+There is no mandatory post-implementation review phase and no `REVIEW.md`.
 
 ## Install in Codex
-
-Ask Codex to install the skill from this GitHub directory:
 
 ```text
 $skill-installer install https://github.com/tsoyvit/feature-development-skill/tree/main/skills/feature-development-skill
@@ -23,7 +40,7 @@ $skill-installer install https://github.com/tsoyvit/feature-development-skill/tr
 
 Restart Codex after installation.
 
-Current Codex documentation recommends user-level skills under `~/.agents/skills`. Manual installation is also possible:
+Manual installation:
 
 ```bash
 git clone https://github.com/tsoyvit/feature-development-skill.git
@@ -31,52 +48,75 @@ mkdir -p ~/.agents/skills
 cp -R feature-development-skill/skills/feature-development-skill ~/.agents/skills/feature-development-skill
 ```
 
-Copy the full directory rather than symlinking only `SKILL.md`, because a skill also contains scripts, references, and templates.
+Installation only installs the skill. It does not modify the current project.
 
-## Invoke
+## Initialize in a project
 
-Explicit invocation is preferred for large work:
-
-```text
-Use $feature-development-skill. Initialize a multi-stage development workspace for the Billing module and prepare the first stage plan.
-```
+Open Codex from the project root and invoke:
 
 ```text
-Use $feature-development-skill. Implement the approved active stage, then write the implementation report. Do not mark it verified.
+Use $feature-development-skill.
+Initialize a multi-stage initiative for Billing.
+Detect the project topology automatically and create the required documents.
 ```
+
+The agent should:
+
+1. read root `README.md` and `AGENTS.md`;
+2. inspect Git boundaries and child repositories;
+3. identify SkillCue, another coordination workspace, or a single repository;
+4. create the initiative in the coordination repository;
+5. ask a question only when the topology is genuinely ambiguous.
+
+For SkillCue, the default location is:
 
 ```text
-Use $feature-development-skill. Review the implementation of the active stage against its approved plan and update the review record.
-```
-
-```text
-Use $feature-development-skill. Resume this feature from its repository documents and tell me the next concrete action.
-```
-
-## Optional AGENTS.md rule
-
-Keep the repository-level instruction short:
-
-```md
-For large, multi-stage feature or module work, use the installed `feature-development-skill`. Do not apply it to routine isolated tasks unless explicitly requested.
-```
-
-## Target-repository structure
-
-By default, the skill creates and maintains:
-
-```text
-docs/feature-development/<feature-slug>/
+docs/initiatives/<initiative-slug>/
 ├── ROADMAP.md
 ├── HANDOFF.md
 └── stages/
     └── 01-<stage-slug>/
         ├── PLAN.md
-        ├── IMPLEMENTATION.md
-        └── REVIEW.md
+        └── RESULT.md
 ```
 
-The target repository, not the chat history, becomes the source of truth.
+## Common invocations
+
+Prepare a stage plan:
+
+```text
+Use $feature-development-skill.
+Prepare the plan for the next Billing stage. Do not implement it.
+```
+
+Implement an approved stage:
+
+```text
+Use $feature-development-skill.
+Implement the approved active stage, write RESULT.md, and update ROADMAP.md and HANDOFF.md.
+```
+
+Resume in a new chat:
+
+```text
+Use $feature-development-skill.
+Resume the current Billing initiative from repository documents and continue from the next action.
+```
+
+## Documentation placement
+
+- Cross-repository initiative plans, stage results, decisions, and handoffs live in the coordination repository.
+- Current technical documentation for backend, web, Windows, or landing behavior stays next to the corresponding application code when that behavior changes.
+- Do not duplicate the same contract in the workspace and an application repository. The initiative documents coordinate work and link to the canonical current documents.
+
+## Optional AGENTS.md rule
+
+```md
+For large, multi-stage SkillCue initiatives, use the installed
+`feature-development-skill`. Store cross-repository initiative state in
+`docs/initiatives/`. Do not apply the skill to routine isolated tasks unless
+explicitly requested.
+```
 
 ## License
 

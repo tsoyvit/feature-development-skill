@@ -12,6 +12,15 @@ TODO
 
 TODO
 
+## Affected repositories
+
+| Repository | Local path | Expected changes |
+|---|---|---|
+
+## Current docs to read or update
+
+- TODO
+
 ## Scope
 
 - TODO
@@ -40,13 +49,10 @@ TODO
 
 TODO
 
-## Test plan
+## Test and check plan
 
-- TODO
-
-## Documentation updates
-
-- TODO
+| Repository | Command or check | Required result |
+|---|---|---|
 
 ## Deferred requirements consumed
 
