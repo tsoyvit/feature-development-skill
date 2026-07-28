@@ -1,4 +1,4 @@
 interface:
   display_name: "Feature Development"
-  short_description: "Run large features through verified stages"
-  default_prompt: "Use $feature-development-skill to structure this large feature into durable stages, plans, implementation reports, reviews, and handoffs."
+  short_description: "Run SkillCue-first multi-stage initiatives"
+  default_prompt: "Use $feature-development-skill to detect the current project topology, coordinate this large feature through approved stage plans and results, preserve deferred requirements, and keep handoff context in the repository."
