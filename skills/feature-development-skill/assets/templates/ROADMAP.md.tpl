@@ -1,12 +1,21 @@
-# {{FEATURE_TITLE}} — Development Roadmap
+# {{FEATURE_TITLE}} — Initiative Roadmap
 
 Status: Discovery
 Feature ID prefix: {{FEATURE_PREFIX}}
-Feature root: `{{FEATURE_ROOT}}`
+Initiative root: `{{FEATURE_ROOT}}`
+Project kind: {{PROJECT_KIND}}
+
+## Project topology
+
+Coordination repository: `{{COORDINATOR_REPO}}`
+
+| Component | Local path | Git repository | Role |
+|---|---|---|---|
+{{PROJECT_TOPOLOGY_ROWS}}
 
 ## Feature summary
 
-Describe the user/business outcome and why the work is large enough to require staged development.
+Describe the user/business outcome and why the work requires staged development.
 
 ## Confirmed scope
 
@@ -18,9 +27,9 @@ Describe the user/business outcome and why the work is large enough to require s
 
 ## Stage registry
 
-| Stage | Status | Objective or verified result | Plan | Implementation | Review |
-|---|---|---|---|---|---|
-| 01 — TODO | Backlog | TODO | — | — | — |
+| Stage | Status | Objective or implemented result | Plan | Result |
+|---|---|---|---|---|
+| 01 — TODO | Backlog | TODO | — | — |
 
 ## Active stage
 
@@ -35,19 +44,19 @@ Next approval or execution boundary: TODO
 
 ## Deferred requirements
 
-| ID | Requirement | Source stage | Target stage or initiative | Status | Acceptance condition | Evidence |
+| ID | Requirement | Source stage | Target stage or initiative | Status | Acceptance condition | Source/result |
 |---|---|---|---|---|---|---|
 
-## Known risks and blockers
+## Known blockers
 
-| ID | Risk or blocker | Impact | Mitigation or next probe | Status |
+| ID | Blocker | Impact | Next action | Status |
 |---|---|---|---|---|
 
-## Evidence index
+## Implementation references
 
-| Evidence | Reference | Notes |
-|---|---|---|
+| Stage | Repository | Branch | Commit/PR | Notes |
+|---|---|---|---|---|
 
 ## Recent changes
 
-- {{DATE}} — Feature workspace initialized.
+- {{DATE}} — Initiative workspace initialized after automatic topology detection.
