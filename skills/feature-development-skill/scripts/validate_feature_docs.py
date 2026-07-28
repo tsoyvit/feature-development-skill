@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate structure and bounded state of feature-development documents."""
+"""Validate initiative documentation structure without reviewing application code."""
 
 from __future__ import annotations
 
@@ -12,16 +12,15 @@ ALLOWED_STAGE_STATUSES = {
     "Discovery",
     "Planned",
     "In progress",
-    "Implemented — unverified",
-    "Needs changes",
-    "Verified",
+    "Implemented",
     "Deferred",
     "Blocked",
     "Cancelled",
 }
 REQUIRED_ROOT = {"ROADMAP.md", "HANDOFF.md"}
-REQUIRED_STAGE = {"PLAN.md", "IMPLEMENTATION.md", "REVIEW.md"}
+REQUIRED_STAGE = {"PLAN.md", "RESULT.md"}
 ROADMAP_HEADINGS = {
+    "Project topology",
     "Feature summary",
     "Confirmed scope",
     "Non-scope",
@@ -29,18 +28,30 @@ ROADMAP_HEADINGS = {
     "Active stage",
     "Confirmed decisions",
     "Deferred requirements",
-    "Known risks and blockers",
-    "Evidence index",
+    "Known blockers",
+    "Implementation references",
     "Recent changes",
 }
 HANDOFF_HEADINGS = {
     "Current position",
-    "Last verified result",
+    "Last implemented result",
+    "Active repositories",
     "Active constraints and decisions",
     "Open blockers",
     "Deferred requirements due now",
     "Read next",
     "Next concrete action",
+}
+RESULT_HEADINGS = {
+    "Repository references",
+    "Actual changes",
+    "Changed files and migrations",
+    "Checks run",
+    "Current documentation",
+    "Deviations from approved plan",
+    "Remaining work and limitations",
+    "Deferred requirements",
+    "Next stage handoff",
 }
 STAGE_DIR_RE = re.compile(r"^\d{2}-[a-z0-9]+(?:-[a-z0-9]+)*$")
 STATUS_RE = re.compile(r"^Status:\s*(.+?)\s*$", re.MULTILINE)
@@ -54,15 +65,15 @@ def headings(text: str) -> set[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("feature_root")
+    parser.add_argument("initiative_root")
     args = parser.parse_args()
 
-    root = Path(args.feature_root).resolve()
+    root = Path(args.initiative_root).resolve()
     errors: list[str] = []
     warnings: list[str] = []
 
     if not root.is_dir():
-        print(f"ERROR: feature root does not exist: {root}")
+        print(f"ERROR: initiative root does not exist: {root}")
         return 2
 
     for name in REQUIRED_ROOT:
@@ -72,19 +83,21 @@ def main() -> int:
     roadmap = root / "ROADMAP.md"
     if roadmap.is_file():
         text = roadmap.read_text(encoding="utf-8")
-        missing = ROADMAP_HEADINGS - headings(text)
-        for item in sorted(missing):
+        for item in sorted(ROADMAP_HEADINGS - headings(text)):
             errors.append(f"ROADMAP.md missing heading: {item}")
 
-        statuses = []
+        if "Coordination repository:" not in text:
+            errors.append("ROADMAP.md missing coordination repository")
+        if "| Component | Local path | Git repository | Role |" not in text:
+            errors.append("ROADMAP.md missing project topology table")
+
         for line in text.splitlines():
             if line.startswith("|") and " — " in line:
-                cells = [c.strip() for c in line.strip("|").split("|")]
+                cells = [cell.strip() for cell in line.strip("|").split("|")]
                 if len(cells) >= 2 and cells[0] not in {"Stage", "---"}:
-                    statuses.append(cells[1])
-        for status in statuses:
-            if status and status not in ALLOWED_STAGE_STATUSES:
-                errors.append(f"ROADMAP.md has unsupported stage status: {status}")
+                    status = cells[1]
+                    if status and status not in ALLOWED_STAGE_STATUSES:
+                        errors.append(f"ROADMAP.md has unsupported stage status: {status}")
 
         deferred_ids: list[str] = []
         in_deferred = False
@@ -95,9 +108,10 @@ def main() -> int:
             if in_deferred and line.startswith("## "):
                 in_deferred = False
             if in_deferred and line.startswith("|"):
-                cells = [c.strip() for c in line.strip("|").split("|")]
+                cells = [cell.strip() for cell in line.strip("|").split("|")]
                 if cells and cells[0] not in {"ID", "---", ""}:
                     deferred_ids.append(cells[0])
+
         seen: set[str] = set()
         for item in deferred_ids:
             if not DEFERRED_ID_RE.fullmatch(item):
@@ -109,8 +123,7 @@ def main() -> int:
     handoff = root / "HANDOFF.md"
     if handoff.is_file():
         text = handoff.read_text(encoding="utf-8")
-        missing = HANDOFF_HEADINGS - headings(text)
-        for item in sorted(missing):
+        for item in sorted(HANDOFF_HEADINGS - headings(text)):
             errors.append(f"HANDOFF.md missing heading: {item}")
         line_count = len(text.splitlines())
         if line_count > 200:
@@ -131,10 +144,15 @@ def main() -> int:
                 if not (path / name).is_file():
                     errors.append(f"{path.name} missing {name}")
             plan = path / "PLAN.md"
-            if plan.is_file():
-                status_match = STATUS_RE.search(plan.read_text(encoding="utf-8"))
-                if not status_match:
-                    errors.append(f"{path.name}/PLAN.md missing Status")
+            if plan.is_file() and not STATUS_RE.search(plan.read_text(encoding="utf-8")):
+                errors.append(f"{path.name}/PLAN.md missing Status")
+            result = path / "RESULT.md"
+            if result.is_file():
+                text = result.read_text(encoding="utf-8")
+                if not STATUS_RE.search(text):
+                    errors.append(f"{path.name}/RESULT.md missing Status")
+                for item in sorted(RESULT_HEADINGS - headings(text)):
+                    errors.append(f"{path.name}/RESULT.md missing heading: {item}")
 
     for message in warnings:
         print(f"WARNING: {message}")
