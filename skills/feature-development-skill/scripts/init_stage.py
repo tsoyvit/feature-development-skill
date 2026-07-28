@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create one stage folder without modifying approved existing documents."""
+"""Create one initiative stage with PLAN.md and RESULT.md."""
 
 from __future__ import annotations
 
@@ -23,10 +23,10 @@ def render(template: Path, values: dict[str, str]) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("feature_root", help="Feature documentation root")
-    parser.add_argument("--number", required=True, type=int, help="Positive stage number")
-    parser.add_argument("--slug", required=True, help="Stage slug in kebab-case")
-    parser.add_argument("--title", required=True, help="Human-readable stage title")
+    parser.add_argument("initiative_root")
+    parser.add_argument("--number", required=True, type=int)
+    parser.add_argument("--slug", required=True)
+    parser.add_argument("--title", required=True)
     args = parser.parse_args()
 
     if args.number < 1 or args.number > 99:
@@ -34,26 +34,26 @@ def main() -> int:
     if not SLUG_RE.fullmatch(args.slug):
         parser.error("--slug must be lowercase kebab-case")
 
-    feature_root = Path(args.feature_root).resolve()
-    if not (feature_root / "ROADMAP.md").is_file():
-        parser.error("feature_root must contain ROADMAP.md")
+    initiative_root = Path(args.initiative_root).resolve()
+    if not (initiative_root / "ROADMAP.md").is_file():
+        parser.error("initiative_root must contain ROADMAP.md")
 
-    stage_number = f"{args.number:02d}"
-    stage_root = feature_root / "stages" / f"{stage_number}-{args.slug}"
+    number = f"{args.number:02d}"
+    stage_root = initiative_root / "stages" / f"{number}-{args.slug}"
     if stage_root.exists():
         print(f"Refusing to overwrite existing stage: {stage_root}", file=sys.stderr)
         return 2
     stage_root.mkdir(parents=True)
 
     template_root = Path(__file__).resolve().parents[1] / "assets" / "templates"
-    values = {"STAGE_NUMBER": stage_number, "STAGE_TITLE": args.title.strip()}
-    for name in ("PLAN.md", "IMPLEMENTATION.md", "REVIEW.md"):
+    values = {"STAGE_NUMBER": number, "STAGE_TITLE": args.title.strip()}
+    for name in ("PLAN.md", "RESULT.md"):
         (stage_root / name).write_text(
             render(template_root / f"{name}.tpl", values), encoding="utf-8"
         )
 
     print(stage_root)
-    print("Add the stage row and active-stage link to ROADMAP.md manually.")
+    print("Add the stage row and active-stage link to ROADMAP.md.")
     return 0
 
 
