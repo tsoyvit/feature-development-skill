@@ -10,7 +10,6 @@ from pathlib import Path
 ALLOWED_STAGE_STATUSES = {
     "Backlog",
     "Discovery",
-    "Planned",
     "In progress",
     "Implemented",
     "Deferred",
@@ -18,7 +17,7 @@ ALLOWED_STAGE_STATUSES = {
     "Cancelled",
 }
 REQUIRED_ROOT = {"ROADMAP.md", "HANDOFF.md"}
-REQUIRED_STAGE = {"PLAN.md", "RESULT.md"}
+REQUIRED_STAGE = {"RESULT.md"}
 ROADMAP_HEADINGS = {
     "Project topology",
     "Feature summary",
@@ -34,7 +33,9 @@ ROADMAP_HEADINGS = {
 }
 HANDOFF_HEADINGS = {
     "Current position",
+    "Active stage intent",
     "Last implemented result",
+    "Current progress",
     "Active repositories",
     "Active constraints and decisions",
     "Open blockers",
@@ -43,12 +44,13 @@ HANDOFF_HEADINGS = {
     "Next concrete action",
 }
 RESULT_HEADINGS = {
+    "Stage objective and approved boundaries",
     "Repository references",
     "Actual changes",
     "Changed files and migrations",
     "Checks run",
     "Current documentation",
-    "Deviations from approved plan",
+    "Deviations from approved scope",
     "Remaining work and limitations",
     "Deferred requirements",
     "Next stage handoff",
@@ -90,6 +92,8 @@ def main() -> int:
             errors.append("ROADMAP.md missing coordination repository")
         if "| Component | Local path | Git repository | Role |" not in text:
             errors.append("ROADMAP.md missing project topology table")
+        if "| Stage | Status | Objective or implemented result | Result |" not in text:
+            errors.append("ROADMAP.md missing stage registry table")
 
         for line in text.splitlines():
             if line.startswith("|") and " — " in line:
@@ -143,14 +147,16 @@ def main() -> int:
             for name in REQUIRED_STAGE:
                 if not (path / name).is_file():
                     errors.append(f"{path.name} missing {name}")
-            plan = path / "PLAN.md"
-            if plan.is_file() and not STATUS_RE.search(plan.read_text(encoding="utf-8")):
-                errors.append(f"{path.name}/PLAN.md missing Status")
             result = path / "RESULT.md"
             if result.is_file():
                 text = result.read_text(encoding="utf-8")
-                if not STATUS_RE.search(text):
+                status_match = STATUS_RE.search(text)
+                if not status_match:
                     errors.append(f"{path.name}/RESULT.md missing Status")
+                elif status_match.group(1) not in {"In progress", "Implemented", "Blocked", "Cancelled"}:
+                    errors.append(
+                        f"{path.name}/RESULT.md has unsupported active/result status: {status_match.group(1)}"
+                    )
                 for item in sorted(RESULT_HEADINGS - headings(text)):
                     errors.append(f"{path.name}/RESULT.md missing heading: {item}")
 
