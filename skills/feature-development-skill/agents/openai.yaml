@@ -1,4 +1,4 @@
 interface:
   display_name: "Feature Development"
-  short_description: "Run SkillCue-first multi-stage initiatives"
-  default_prompt: "Use $feature-development-skill to detect the current project topology, coordinate this large feature through approved stage plans and results, preserve deferred requirements, and keep handoff context in the repository."
+  short_description: "Run context-safe multi-stage SkillCue initiatives"
+  default_prompt: "Use $feature-development-skill to detect the project topology, prepare the next stage in Codex Plan Mode, ask me for material decisions, execute immediately after my explicit approval, preserve durable context in ROADMAP.md and HANDOFF.md, record factual stage outcomes in RESULT.md, and carry deferred requirements into later stages."
