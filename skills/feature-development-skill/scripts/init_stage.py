@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Create one initiative stage with PLAN.md and RESULT.md."""
+"""Create one initiative stage with its durable RESULT.md checkpoint."""
 
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import re
 import sys
 from pathlib import Path
@@ -46,14 +47,18 @@ def main() -> int:
     stage_root.mkdir(parents=True)
 
     template_root = Path(__file__).resolve().parents[1] / "assets" / "templates"
-    values = {"STAGE_NUMBER": number, "STAGE_TITLE": args.title.strip()}
-    for name in ("PLAN.md", "RESULT.md"):
-        (stage_root / name).write_text(
-            render(template_root / f"{name}.tpl", values), encoding="utf-8"
-        )
+    values = {
+        "STAGE_NUMBER": number,
+        "STAGE_TITLE": args.title.strip(),
+        "DATE": dt.date.today().isoformat(),
+    }
+    (stage_root / "RESULT.md").write_text(
+        render(template_root / "RESULT.md.tpl", values), encoding="utf-8"
+    )
 
     print(stage_root)
-    print("Add the stage row and active-stage link to ROADMAP.md.")
+    print("Add the stage row, result link, and active-stage state to ROADMAP.md.")
+    print("Record the active intent and next action in HANDOFF.md, then continue implementation.")
     return 0
 
 
