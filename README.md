@@ -95,8 +95,6 @@ After approval, the same run should:
 4. run relevant checks and update current technical docs;
 5. complete `RESULT.md` and move the initiative to the next stage.
 
-No second approval is required between context checkpointing and implementation.
-
 ## Resume in a new chat
 
 ```text
