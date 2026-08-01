@@ -32,14 +32,15 @@ docs/initiatives/<initiative-slug>/
 This includes:
 
 - roadmap;
-- handoff;
-- stage plans;
-- stage results;
+- bounded handoff;
+- per-stage factual results and active checkpoints;
 - cross-repository decisions;
 - deferred requirements;
 - per-repository branch/commit/PR references.
 
 Do not copy these files into backend, web, windows, or landing.
+
+The working implementation plan lives in Codex Plan Mode. After approval, the agent checkpoints only the durable stage intent and approved boundaries needed to continue safely.
 
 ## Current documentation rule
 
@@ -92,13 +93,24 @@ Do not run every project check automatically when only one repository changed. R
 
 Follow root `AGENTS.md`. Graphify is selective navigation support, not source-of-truth documentation. Do not invoke it by default when current docs and direct source inspection are sufficient.
 
+## Planning and approval behavior
+
+For a SkillCue stage:
+
+1. work in Codex Plan Mode;
+2. read root `AGENTS.md`, initiative context, relevant canonical current docs, and actual code;
+3. identify every affected repository;
+4. ask the user for material product, public-copy, data-contract, rollout, destructive, or scope decisions;
+5. refine the Codex plan until the user approves execution;
+6. after approval, create missing initiative/stage files, checkpoint durable context, and continue implementation without another approval stop.
+
 ## Initialization behavior
 
-When this profile is detected:
+When this profile is detected in a writable run:
 
 1. choose the root workspace as coordination repository;
-2. create the initiative under root `docs/initiatives/`;
+2. create the initiative under root `docs/initiatives/` when it does not exist;
 3. populate all five repository rows in `ROADMAP.md`;
 4. mark affected repositories per stage rather than creating separate roadmaps;
-5. read root `AGENTS.md` and relevant canonical current docs before planning or implementing;
+5. create a stage `RESULT.md` when implementation begins;
 6. ask the user only if the detected layout conflicts with current repository instructions.
