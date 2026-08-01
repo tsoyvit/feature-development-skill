@@ -65,6 +65,21 @@ def headings(text: str) -> set[str]:
     return set(HEADING_RE.findall(text))
 
 
+def section_lines(text: str, heading: str) -> list[str]:
+    lines: list[str] = []
+    in_section = False
+    marker = f"## {heading}"
+    for line in text.splitlines():
+        if line.strip() == marker:
+            in_section = True
+            continue
+        if in_section and line.startswith("## "):
+            break
+        if in_section:
+            lines.append(line)
+    return lines
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("initiative_root")
@@ -95,23 +110,18 @@ def main() -> int:
         if "| Stage | Status | Objective or implemented result | Result |" not in text:
             errors.append("ROADMAP.md missing stage registry table")
 
-        for line in text.splitlines():
-            if line.startswith("|") and " — " in line:
-                cells = [cell.strip() for cell in line.strip("|").split("|")]
-                if len(cells) >= 2 and cells[0] not in {"Stage", "---"}:
-                    status = cells[1]
-                    if status and status not in ALLOWED_STAGE_STATUSES:
-                        errors.append(f"ROADMAP.md has unsupported stage status: {status}")
+        for line in section_lines(text, "Stage registry"):
+            if not line.startswith("|"):
+                continue
+            cells = [cell.strip() for cell in line.strip("|").split("|")]
+            if len(cells) >= 2 and cells[0] not in {"Stage", "---", ""}:
+                status = cells[1]
+                if status not in ALLOWED_STAGE_STATUSES:
+                    errors.append(f"ROADMAP.md has unsupported stage status: {status}")
 
         deferred_ids: list[str] = []
-        in_deferred = False
-        for line in text.splitlines():
-            if line.strip() == "## Deferred requirements":
-                in_deferred = True
-                continue
-            if in_deferred and line.startswith("## "):
-                in_deferred = False
-            if in_deferred and line.startswith("|"):
+        for line in section_lines(text, "Deferred requirements"):
+            if line.startswith("|"):
                 cells = [cell.strip() for cell in line.strip("|").split("|")]
                 if cells and cells[0] not in {"ID", "---", ""}:
                     deferred_ids.append(cells[0])
