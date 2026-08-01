@@ -163,7 +163,13 @@ def main() -> int:
                 status_match = STATUS_RE.search(text)
                 if not status_match:
                     errors.append(f"{path.name}/RESULT.md missing Status")
-                elif status_match.group(1) not in {"In progress", "Implemented", "Blocked", "Cancelled"}:
+                elif status_match.group(1) not in {
+                    "In progress",
+                    "Implemented",
+                    "Deferred",
+                    "Blocked",
+                    "Cancelled",
+                }:
                     errors.append(
                         f"{path.name}/RESULT.md has unsupported active/result status: {status_match.group(1)}"
                     )
