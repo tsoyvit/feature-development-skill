@@ -8,9 +8,18 @@ Updated: {{DATE}}
 - Active stage: Not selected
 - Stage status: Not started
 
+## Active stage intent
+
+No active stage selected.
+
 ## Last implemented result
 
 None yet.
+
+## Current progress
+
+- Initiative initialized.
+- No stage implementation has started.
 
 ## Active repositories
 
@@ -33,9 +42,9 @@ None selected.
 ## Read next
 
 1. `ROADMAP.md`
-2. Active stage `PLAN.md` and `RESULT.md` when selected
-3. Relevant canonical current documentation
+2. Active stage `RESULT.md` when a stage has started
+3. Relevant canonical current documentation and code
 
 ## Next concrete action
 
-Complete discovery and propose the first stage boundary.
+Complete discovery in Codex Plan Mode and prepare the first stage for approval.

@@ -1,7 +1,22 @@
-# Stage {{STAGE_NUMBER}} — Result
+# Stage {{STAGE_NUMBER}} — {{STAGE_TITLE}} — Result
 
-Status: Not started
+Status: In progress
+Started at: {{DATE}}
 Completed at: —
+
+## Stage objective and approved boundaries
+
+### Objective
+
+TODO
+
+### Included
+
+- TODO
+
+### Excluded or constrained
+
+- TODO
 
 ## Repository references
 
@@ -10,7 +25,7 @@ Completed at: —
 
 ## Actual changes
 
-TODO
+Implementation has started. Record factual progress and replace this text when the stage is completed.
 
 ## Changed files and migrations
 
@@ -30,13 +45,13 @@ TODO
 
 ### Created or updated
 
-- TODO
+- None yet
 
 ### Not updated
 
 - None, or explain why no update was needed.
 
-## Deviations from approved plan
+## Deviations from approved scope
 
 None recorded.
 
@@ -56,4 +71,4 @@ None recorded.
 
 ## Next stage handoff
 
-- TODO
+- Continue the active stage from `HANDOFF.md` until implementation is complete.

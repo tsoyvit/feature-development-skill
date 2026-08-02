@@ -27,9 +27,9 @@ Describe the user/business outcome and why the work requires staged development.
 
 ## Stage registry
 
-| Stage | Status | Objective or implemented result | Plan | Result |
-|---|---|---|---|---|
-| 01 — TODO | Backlog | TODO | — | — |
+| Stage | Status | Objective or implemented result | Result |
+|---|---|---|---|
+| 01 — TODO | Backlog | TODO | — |
 
 ## Active stage
 

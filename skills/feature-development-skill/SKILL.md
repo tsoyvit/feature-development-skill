@@ -1,89 +1,88 @@
 ---
 name: feature-development-skill
-description: Run large, multi-stage feature or module development with a SkillCue-first workflow. Automatically detect the SkillCue coordination workspace with independent backend, web, windows, and landing repositories, or fall back to another coordination workspace or a single repository. Maintain central ROADMAP.md and HANDOFF.md files plus approved PLAN.md and factual RESULT.md files for each stage. Preserve deferred requirements and cross-repository implementation references without adding a mandatory post-implementation review phase. Use when the user explicitly invokes this skill or requests substantial work spanning stages, repositories, migrations, future obligations, or multiple Codex sessions. Do not use for routine isolated tasks unless explicitly requested.
+description: Run large, multi-stage feature or module development without losing context between Codex sessions. Designed first for the SkillCue coordination workspace with independent backend, web, windows, and landing repositories, with fallback support for another coordination workspace or a single repository. Prepare each stage in Codex Plan Mode, execute after explicit user approval, preserve durable initiative context in ROADMAP.md and HANDOFF.md, record factual per-stage outcomes in RESULT.md, and carry stable deferred requirements into later stages. Use for substantial work spanning stages, repositories, migrations, future obligations, or multiple Codex sessions. Do not use for routine isolated tasks unless explicitly requested.
 license: MIT
 metadata:
   author: tsoyvit
-  version: "2.0.0"
+  version: "3.0.0"
 ---
 
 # Feature Development
 
-Run large feature work as a durable lifecycle stored in the project repository. Treat chat history as temporary and repository documents as the source of truth.
+Coordinate large staged features so a new Codex session can continue from repository state without reconstructing the whole discussion.
 
-This skill is designed first for SkillCue. Reusability is secondary: preserve the SkillCue behavior below, then fall back cleanly for other projects.
+The workflow is SkillCue-first. Generic project support must not weaken the SkillCue behavior.
+
+## Lifecycle
+
+```text
+idea and product discussion
+→ Codex Plan Mode discovery and refinement
+→ explicit user approval
+→ durable stage checkpoint
+→ implementation
+→ factual stage result
+→ roadmap and handoff update
+→ next stage
+```
+
+The Codex plan is the working implementation plan. Repository documents retain confirmed decisions, active implementation context, actual results, and future obligations.
 
 ## Core rules
 
-1. **SkillCue first.** When the current root is `skillcue-workspace` or matches the documented SkillCue layout, use the SkillCue project model in [references/skillcue-workspace.md](references/skillcue-workspace.md).
-2. **Detect topology automatically.** Inspect root instructions, Git boundaries, remotes, and child repositories. Do not ask the user to classify the project unless the evidence is genuinely ambiguous.
-3. **Centralize initiative state.** In a coordination workspace, store roadmap, handoff, stage plans, and stage results only in the coordination repository.
-4. **Keep current technical docs near code.** Update backend/web/windows/landing current documentation when their behavior changes, but do not duplicate initiative documents there.
-5. **Freeze approved plans.** After explicit user approval, preserve `PLAN.md`. Record actual deviations in `RESULT.md`.
-6. **No mandatory review phase.** The lifecycle ends implementation with a factual `RESULT.md` and roadmap/handoff updates. Do not create `REVIEW.md`, review statuses, or a separate verification stage.
-7. **Preserve future obligations.** Give every deferred requirement a stable ID, target stage or initiative, and acceptance condition.
-8. **Keep context bounded.** Rewrite `HANDOFF.md`; do not append transcripts or unlimited history.
-9. **Stay proportional.** Do not use this workflow for a routine isolated task unless explicitly requested.
+1. **Detect the project automatically.** Inspect root instructions, Git boundaries, remotes, and child repositories before asking the user to classify the project.
+2. **Use the coordination repository for initiative state.** For SkillCue this is `tsoyvit/skillcue-workspace`.
+3. **Keep current technical documentation beside the owning code.** Initiative documents coordinate work; they do not replace backend/web/windows/landing current docs.
+4. **Ask for material decisions.** Product behavior, public copy, data contracts, destructive changes, scope expansion, and rollout semantics belong to the user unless already confirmed.
+5. **Execution approval is the stage gate.** Approval of the current Codex plan transitions directly into implementation.
+6. **Checkpoint before application changes.** Create missing initiative/stage files, mark the stage `In progress`, and record concise active context before changing code.
+7. **Record facts, not discussion history.** Keep documents compact and do not copy chats, full plans, diffs, or logs.
+8. **Preserve future obligations.** Every deferred requirement receives a stable ID, target stage or initiative, and acceptance condition.
+9. **Keep handoff current.** Rewrite `HANDOFF.md` after meaningful checkpoints and before ending an incomplete run.
+10. **Stay proportional.** Use this lifecycle for substantial staged work, not ordinary isolated fixes unless explicitly requested.
 
-## Operating modes
+## Project topology
 
-Infer the mode from the user's request and current initiative state:
+Run `scripts/detect_project.py` when available and inspect:
 
-- **Initialize**: detect topology and create the initiative workspace.
-- **Discover**: investigate current behavior and define scope, constraints, stages, and open questions.
-- **Plan**: create or revise one stage plan before explicit approval.
-- **Implement**: execute an approved stage, run relevant checks, write `RESULT.md`, and update initiative state.
-- **Close stage**: complete missing roadmap/handoff bookkeeping after implementation when it was not finished in the implementation run.
-- **Resume**: reconstruct current state from repository documents and continue from the next valid action.
-
-Do not implement a proposed plan before explicit user approval. The implementing run may finish the stage and update its documents; no separate review run is required by this skill.
-
-## Detect project topology
-
-Run `scripts/detect_project.py` from the current project root when available. Also inspect:
-
-- root `README.md`;
-- root `AGENTS.md`;
+- root `README.md` and `AGENTS.md`;
 - root Git remote;
-- immediate child directories that are independent Git repositories;
+- immediate child Git repositories;
 - existing `docs/initiatives/*/ROADMAP.md`.
 
-### SkillCue detection
+### SkillCue
 
-Treat the project as SkillCue when one or more strong signals match:
+Treat the root as SkillCue when strong signals identify `skillcue-workspace` and its independent repositories:
 
-- root remote is `tsoyvit/skillcue-workspace`;
-- root README identifies `SkillCue Workspace`;
-- the root coordinates `backend`, `web`, `windows`, and `landing`;
-- those paths map to the known independent SkillCue repositories.
+| Component | Local path | Git repository | Responsibility |
+|---|---|---|---|
+| Workspace | `.` | `tsoyvit/skillcue-workspace` | Initiative state, cross-repository decisions, shared docs and orchestration |
+| Backend | `backend/` | `tsoyvit/skillcue` | Backend, API, billing, auth, resources, providers |
+| Web | `web/` | `tsoyvit/skillcue-web` | User cabinet and owner/admin web app |
+| Windows | `windows/` | `tsoyvit/skillcue-windows` | Windows client |
+| Landing | `landing/` | `tsoyvit/skillcue-landing` | Public marketing site |
 
-Use the root workspace as the coordination repository even though implementation occurs in child repositories.
+Use root Git only for workspace files. Target child repositories explicitly with `git -C backend`, `git -C web`, `git -C windows`, and `git -C landing`.
 
-### Generic coordination workspace
+Read [references/skillcue-workspace.md](references/skillcue-workspace.md) before initializing or implementing a SkillCue initiative.
 
-Treat the root as a coordination workspace when it owns shared docs/scripts/orchestration and contains multiple independent child Git repositories.
+### Other coordination workspaces
+
+Use the root as coordinator when it owns shared docs/orchestration and contains independent application repositories.
 
 ### Single repository
 
-When there are no independent child application repositories and the root is the code repository, use the root as both coordination and implementation repository.
+Use the root as both coordination and implementation repository when there are no independent child application repositories.
 
-Ask one targeted question only if:
+Ask one targeted question only when multiple roots are plausible, current instructions conflict with detected topology, or automatic selection would overwrite incompatible initiative state.
 
-- multiple plausible coordination roots exist;
-- the current directory is inside a child repository rather than the intended workspace and project instructions do not resolve it;
-- destructive or conflicting existing initiative structures make automatic selection unsafe.
+## Initiative structure
 
-## Initialize the initiative
-
-Installation must not create project files. Initialization happens only after the user invokes the skill for a specific project or initiative.
-
-Default initiative location:
+Default location:
 
 ```text
 docs/initiatives/<initiative-slug>/
 ```
-
-Use `scripts/init_feature.py` when available. It detects the topology and pre-populates the project map. Never overwrite an existing initiative.
 
 Required structure:
 
@@ -93,39 +92,16 @@ Required structure:
 ├── HANDOFF.md
 └── stages/
     └── NN-stage-slug/
-        ├── PLAN.md
         └── RESULT.md
 ```
 
-Before editing, read only the bounded context required for the current mode:
+Installation never creates project files. Use `scripts/init_feature.py` in a writable run when the initiative is first needed. Use `scripts/init_stage.py` when an approved stage starts. Never overwrite existing initiative or stage state.
 
-- always read `ROADMAP.md` and `HANDOFF.md`;
-- read the active stage `PLAN.md` for planning or implementation;
-- read the active stage `RESULT.md` when resuming or closing an implemented stage;
-- load detailed references from this skill only when needed.
+## Document roles
 
-## SkillCue repository model
-
-For SkillCue, use:
-
-| Component | Local path | Git repository | Responsibility |
-|---|---|---|---|
-| Workspace | `.` | `tsoyvit/skillcue-workspace` | Cross-repository initiatives, shared docs, orchestration, project agent rules |
-| Backend | `backend/` | `tsoyvit/skillcue` | Backend, API, billing, auth, resources, providers |
-| Web | `web/` | `tsoyvit/skillcue-web` | User cabinet and owner/admin web app |
-| Windows | `windows/` | `tsoyvit/skillcue-windows` | Windows client |
-| Landing | `landing/` | `tsoyvit/skillcue-landing` | Public marketing site |
-
-Run root Git operations only for workspace files. Run application Git operations explicitly with `git -C backend`, `git -C web`, `git -C windows`, or `git -C landing`.
-
-Read [references/skillcue-workspace.md](references/skillcue-workspace.md) before initializing or implementing a SkillCue initiative.
-
-## Document contract
-
-- `ROADMAP.md`: compact source of truth for project topology, scope, stages, decisions, deferred requirements, blockers, and implementation references.
-- `HANDOFF.md`: bounded current state for a new chat.
-- `PLAN.md`: proposed or approved plan for one stage. Preserve after approval.
-- `RESULT.md`: factual account of actual changes, repository references, checks, docs, deviations, remaining work, and new deferred requirements.
+- `ROADMAP.md`: project topology, feature scope, stage registry, active stage, durable decisions, deferred requirements, blockers, and implementation references.
+- `HANDOFF.md`: bounded current position, active stage intent, progress, repositories, constraints, blockers, deferred requirements due now, and exact next action.
+- `RESULT.md`: active checkpoint and final factual record for one started stage, including approved boundaries, actual changes, checks, docs, deviations, limitations, deferred requirements, and next-stage handoff.
 
 Read [references/document-contracts.md](references/document-contracts.md) before creating or materially restructuring these files.
 
@@ -135,18 +111,47 @@ Use only:
 
 - `Backlog`
 - `Discovery`
-- `Planned`
 - `In progress`
 - `Implemented`
 - `Deferred`
 - `Blocked`
 - `Cancelled`
 
-`Implemented` means the stage implementation run is complete and `RESULT.md` records the checks and limitations. It does not claim an independent audit or external certification.
+`Implemented` means implementation finished and the result records checks and limitations. It does not claim an independent audit or external certification.
+
+## Discover and plan
+
+Use Codex Plan Mode.
+
+1. Read project instructions and existing initiative context when present.
+2. Inspect canonical current docs and actual code for every potentially affected repository.
+3. Separate confirmed behavior, assumptions, open questions, and proposed changes.
+4. Ask the user for material decisions instead of choosing silently.
+5. Make affected repositories, scope, non-scope, invariants, failure/recovery behavior, migrations, rollout, checks, documentation changes, deferred obligations, and completion criteria explicit.
+6. Refine the Codex plan until the user approves execution.
+
+## Implement
+
+After explicit approval of the current Codex plan:
+
+1. initialize the initiative if missing;
+2. create the stage result if missing;
+3. set the stage `In progress` in `ROADMAP.md`;
+4. checkpoint the concise objective, approved boundaries, durable decisions, affected repositories, deferred requirements due now, progress, and next action in `ROADMAP.md`, `HANDOFF.md`, and `RESULT.md`;
+5. continue into implementation in the same run;
+6. target each affected repository explicitly;
+7. stay within approved scope and ask before making a new material decision;
+8. update canonical current docs when behavior changes;
+9. run relevant checks for every changed repository;
+10. complete `RESULT.md` from actual Git state and command output;
+11. record branch, commit, and PR references when available;
+12. mark the stage `Implemented`, update the roadmap, and rewrite the handoff.
+
+During a long or interrupted stage, update the handoff and active result with factual progress before the run ends.
 
 ## Deferred requirements
 
-Record every future obligation in `ROADMAP.md` with:
+Record each future obligation in `ROADMAP.md` with:
 
 - stable ID;
 - concise requirement;
@@ -156,89 +161,58 @@ Record every future obligation in `ROADMAP.md` with:
 - acceptance condition;
 - source/result link.
 
-Use a project/domain prefix such as `BILL-ADM-001`. Do not renumber existing IDs.
+Use a domain prefix such as `BILL-ADM-001`. Never renumber an existing ID.
 
-At the start of every stage, collect deferred requirements targeted to it. At completion, either mark them implemented with a result link or move them explicitly with a reason.
+At stage start, collect deferred requirements targeted to it. At completion, mark each implemented with a result link or move it explicitly with a reason.
 
-## Mode procedures
+## Resume
 
-### Initialize or discover
+1. Read `ROADMAP.md` and `HANDOFF.md`.
+2. Read the active stage `RESULT.md` when it exists.
+3. Inspect referenced repositories, branches, diffs, current docs, and code only as needed.
+4. Reconstruct active intent, completed work, remaining work, blockers, deferred requirements due now, and the exact next action.
+5. Continue an `In progress` stage from the checkpoint and actual Git state.
+6. Ask one targeted question when a material boundary cannot be reconstructed.
+7. Do not reopen implemented stages or active decisions without new evidence.
 
-- Read project instructions before inventing structure.
-- Detect and record project topology automatically.
-- For SkillCue, create the initiative only in workspace `docs/initiatives/`.
-- Separate confirmed facts, assumptions, and open questions.
-- Define only useful stage boundaries.
-- Set the next concrete action in `HANDOFF.md`.
+## Close stage
 
-### Plan
-
-- Ground the plan in current code and canonical current docs.
-- List affected repositories explicitly.
-- State scope, non-scope, invariants, failure/recovery behavior, migrations, rollout, checks, documentation changes, and completion criteria.
-- Link deferred requirements consumed or created.
-- Keep the plan proposed until explicit user approval.
-
-### Implement
-
-- Require an approved plan unless the user explicitly changes scope.
-- Mark the stage `In progress`.
-- Work from the coordination root and target child repositories explicitly.
-- Keep changes within stage scope; record deviations in `RESULT.md`.
-- Run the checks relevant to every changed repository.
-- Update canonical current docs when behavior changes.
-- Write `RESULT.md` from actual Git state and command results.
-- Record branch, commit, and PR for each touched repository when available.
-- Mark the stage `Implemented`.
-- Update `ROADMAP.md` and rewrite `HANDOFF.md` in the same run when possible.
-
-### Close stage
-
-Use only when implementation finished but initiative bookkeeping remains incomplete:
+Use only when implementation finished but bookkeeping remains incomplete:
 
 - finish `RESULT.md`;
 - mark the stage `Implemented`;
-- update decisions and deferred requirements;
-- record repository references;
+- update decisions, deferred requirements, blockers, and repository references;
 - rewrite `HANDOFF.md`;
 - run `scripts/validate_feature_docs.py`.
 
-Do not introduce a review or verification phase.
-
-### Resume
-
-- Read `ROADMAP.md`, `HANDOFF.md`, and only the active stage documents.
-- Inspect referenced repositories/branches when necessary.
-- Summarize current status, last implemented result, blockers, deferred requirements due now, and the next action.
-- Do not redo completed discovery or reopen approved decisions without new evidence.
+There is no mandatory review or verification phase.
 
 ## Change control
 
-When an approved requirement changes:
+When a durable requirement or decision changes:
 
-1. preserve the prior decision in the roadmap;
-2. record the reason and date;
-3. update affected scope and deferred requirements;
-4. add an amendment or new plan version instead of rewriting the approved history;
-5. identify work already implemented under the old decision.
+1. record the new decision and rationale in `ROADMAP.md`;
+2. mark the prior decision `Superseded` when applicable;
+3. update affected scope, blockers, and deferred requirements;
+4. identify work already implemented under the prior decision;
+5. record implementation impact in the active or completed `RESULT.md`.
 
-Minor implementation details that do not alter scope or invariants belong in `RESULT.md`.
+Minor implementation details belong only in the result.
 
-## Final response contract
+## Final response
 
-At the end of a run, report:
+For writable runs, report:
 
 - mode performed;
-- initiative files created or updated;
-- repositories and code files changed;
-- migrations changed;
+- initiative files updated;
+- repositories, code files, and migrations changed;
 - current docs read/created/updated;
-- checks run and outcomes;
+- checks and outcomes;
 - resulting stage status;
-- blockers or deferred IDs;
+- blockers and deferred IDs;
 - exact next action.
 
-Do not claim work that was not performed.
+In Plan Mode, return the current plan and unresolved decisions without claiming repository changes.
 
 ## Validation
 
@@ -246,9 +220,9 @@ Do not claim work that was not performed.
 python scripts/validate_feature_docs.py <initiative-root>
 ```
 
-The validator checks document structure, required headings, stage completeness, bounded handoff size, allowed statuses, project topology, and deferred-ID consistency. It does not inspect or review application code.
+The validator checks structure, required headings, stage completeness, bounded handoff size, allowed statuses, project topology, and deferred-ID consistency. It does not inspect application code.
 
-For lifecycle details and examples, read:
+Further references:
 
 - [references/workflow.md](references/workflow.md)
 - [references/examples.md](references/examples.md)

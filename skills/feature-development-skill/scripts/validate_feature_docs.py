@@ -10,7 +10,6 @@ from pathlib import Path
 ALLOWED_STAGE_STATUSES = {
     "Backlog",
     "Discovery",
-    "Planned",
     "In progress",
     "Implemented",
     "Deferred",
@@ -18,7 +17,7 @@ ALLOWED_STAGE_STATUSES = {
     "Cancelled",
 }
 REQUIRED_ROOT = {"ROADMAP.md", "HANDOFF.md"}
-REQUIRED_STAGE = {"PLAN.md", "RESULT.md"}
+REQUIRED_STAGE = {"RESULT.md"}
 ROADMAP_HEADINGS = {
     "Project topology",
     "Feature summary",
@@ -34,7 +33,9 @@ ROADMAP_HEADINGS = {
 }
 HANDOFF_HEADINGS = {
     "Current position",
+    "Active stage intent",
     "Last implemented result",
+    "Current progress",
     "Active repositories",
     "Active constraints and decisions",
     "Open blockers",
@@ -43,12 +44,13 @@ HANDOFF_HEADINGS = {
     "Next concrete action",
 }
 RESULT_HEADINGS = {
+    "Stage objective and approved boundaries",
     "Repository references",
     "Actual changes",
     "Changed files and migrations",
     "Checks run",
     "Current documentation",
-    "Deviations from approved plan",
+    "Deviations from approved scope",
     "Remaining work and limitations",
     "Deferred requirements",
     "Next stage handoff",
@@ -61,6 +63,21 @@ DEFERRED_ID_RE = re.compile(r"^[A-Z][A-Z0-9-]{1,15}-(?:REQ|ADM)-\d{3}$")
 
 def headings(text: str) -> set[str]:
     return set(HEADING_RE.findall(text))
+
+
+def section_lines(text: str, heading: str) -> list[str]:
+    lines: list[str] = []
+    in_section = False
+    marker = f"## {heading}"
+    for line in text.splitlines():
+        if line.strip() == marker:
+            in_section = True
+            continue
+        if in_section and line.startswith("## "):
+            break
+        if in_section:
+            lines.append(line)
+    return lines
 
 
 def main() -> int:
@@ -90,24 +107,21 @@ def main() -> int:
             errors.append("ROADMAP.md missing coordination repository")
         if "| Component | Local path | Git repository | Role |" not in text:
             errors.append("ROADMAP.md missing project topology table")
+        if "| Stage | Status | Objective or implemented result | Result |" not in text:
+            errors.append("ROADMAP.md missing stage registry table")
 
-        for line in text.splitlines():
-            if line.startswith("|") and " — " in line:
-                cells = [cell.strip() for cell in line.strip("|").split("|")]
-                if len(cells) >= 2 and cells[0] not in {"Stage", "---"}:
-                    status = cells[1]
-                    if status and status not in ALLOWED_STAGE_STATUSES:
-                        errors.append(f"ROADMAP.md has unsupported stage status: {status}")
+        for line in section_lines(text, "Stage registry"):
+            if not line.startswith("|"):
+                continue
+            cells = [cell.strip() for cell in line.strip("|").split("|")]
+            if len(cells) >= 2 and cells[0] not in {"Stage", "---", ""}:
+                status = cells[1]
+                if status not in ALLOWED_STAGE_STATUSES:
+                    errors.append(f"ROADMAP.md has unsupported stage status: {status}")
 
         deferred_ids: list[str] = []
-        in_deferred = False
-        for line in text.splitlines():
-            if line.strip() == "## Deferred requirements":
-                in_deferred = True
-                continue
-            if in_deferred and line.startswith("## "):
-                in_deferred = False
-            if in_deferred and line.startswith("|"):
+        for line in section_lines(text, "Deferred requirements"):
+            if line.startswith("|"):
                 cells = [cell.strip() for cell in line.strip("|").split("|")]
                 if cells and cells[0] not in {"ID", "---", ""}:
                     deferred_ids.append(cells[0])
@@ -143,14 +157,22 @@ def main() -> int:
             for name in REQUIRED_STAGE:
                 if not (path / name).is_file():
                     errors.append(f"{path.name} missing {name}")
-            plan = path / "PLAN.md"
-            if plan.is_file() and not STATUS_RE.search(plan.read_text(encoding="utf-8")):
-                errors.append(f"{path.name}/PLAN.md missing Status")
             result = path / "RESULT.md"
             if result.is_file():
                 text = result.read_text(encoding="utf-8")
-                if not STATUS_RE.search(text):
+                status_match = STATUS_RE.search(text)
+                if not status_match:
                     errors.append(f"{path.name}/RESULT.md missing Status")
+                elif status_match.group(1) not in {
+                    "In progress",
+                    "Implemented",
+                    "Deferred",
+                    "Blocked",
+                    "Cancelled",
+                }:
+                    errors.append(
+                        f"{path.name}/RESULT.md has unsupported active/result status: {status_match.group(1)}"
+                    )
                 for item in sorted(RESULT_HEADINGS - headings(text)):
                     errors.append(f"{path.name}/RESULT.md missing heading: {item}")
 
